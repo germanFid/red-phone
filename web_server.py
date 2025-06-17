@@ -1,33 +1,45 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse, parse_qs
+import asyncio
+from functools import partial
+from aiohttp import web
+from queue import Queue
 
-class RequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        parsed_url = urlparse(self.path)
-        # query_params = parse_qs(self.path)
-        query_params = parse_qs(parsed_url.query)
+async def handle_get(request, id_queue:Queue):
+    discord_id = request.query.get("discord_id")
+    if not discord_id:
+        return web.Response(text="Error: discord_id is required", status=400)
+    
+    print(f'Получен discord_id: {discord_id}')
+    # recieved_ids.append(discord_id)
+    id_queue.put(discord_id)
 
-        discord_id = query_params.get('discord_id', [None])[0]
+    return web.Response(text=f'Recieved {discord_id}')
 
-        if discord_id:
-            print(f'Получили id: {discord_id}')
+async def start_webserver(id_queue:Queue, address='localhost', port='8000'):
+    app = web.Application()
 
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            # self.wfile.write(f"Discord ID received: {discord_id}".encode())
+    handler_w_args = partial(handle_get, id_queue=id_queue)
 
+    app.router.add_get("/", handler_w_args)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, address, port)
+    await site.start()
+    print(f"Сервер запущен на {address}:{port}")
+
+    while True:
+        await asyncio.sleep(3600)
+
+async def main():
+    recieved_ids = Queue()
+    server_task = asyncio.create_task(start_webserver(recieved_ids))
+
+    while True:
+        await asyncio.sleep(10)
+        if not recieved_ids.empty():
+            print(f'IDs: {recieved_ids.get()}')
         else:
-            self.send_response(400)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            # self.wfile.write(f"Discord ID missing")
-
-def run_server(address='', port=8000):
-    server_address = (address, port)
-    httpd = HTTPServer(server_address, RequestHandler)
-    print(f'Сервер запущен! Порт {port}')
-    httpd.serve_forever()
+            print(f'Queue empty!')
 
 if __name__ == '__main__':
-    run_server()
+    asyncio.run(main())
