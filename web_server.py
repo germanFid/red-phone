@@ -29,17 +29,3 @@ async def start_webserver(id_queue:Queue, address='localhost', port='8000'):
 
     while True:
         await asyncio.sleep(3600)
-
-async def main():
-    recieved_ids = Queue()
-    server_task = asyncio.create_task(start_webserver(recieved_ids))
-
-    while True:
-        await asyncio.sleep(10)
-        if not recieved_ids.empty():
-            print(f'IDs: {recieved_ids.get()}')
-        else:
-            print(f'Queue empty!')
-
-if __name__ == '__main__':
-    asyncio.run(main())
