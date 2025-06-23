@@ -11,7 +11,6 @@ async def handle_get(request, id_queue: Queue):
     if not discord_id:
         return web.Response(text="Error: discord_id is required", status=400)
     print(f'Получен discord_id: {discord_id}')
-    # recieved_ids.append(discord_id)
     id_queue.put(discord_id)
     return web.Response(text=f'Recieved {discord_id}')
 
