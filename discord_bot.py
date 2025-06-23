@@ -27,8 +27,8 @@ async def call(id_queue, guild_id):
             if can_call:
                 can_call = False
                 v_channel = next(
-                            ch for ch in guild.voice_channels
-                            if ch.name == "RedPhoneChannel")
+                                ch for ch in guild.voice_channels
+                                if ch.name == "RedPhoneChannel")
                 await member_channel.move_to(v_channel)
 
     guild = bot.get_guild(guild_id)
