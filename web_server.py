@@ -4,7 +4,8 @@ from functools import partial
 from queue import Queue
 from aiohttp import web
 
-async def handle_get(request, id_queue:Queue):
+
+async def handle_get(request, id_queue: Queue):
     """async function for processing requests"""
     discord_id = request.query.get("discord_id")
     if not discord_id:
@@ -14,7 +15,8 @@ async def handle_get(request, id_queue:Queue):
     id_queue.put(discord_id)
     return web.Response(text=f'Recieved {discord_id}')
 
-async def start_webserver(id_queue:Queue, address='localhost', port='8000'):
+
+async def start_webserver(id_queue: Queue, address='localhost', port='8000'):
     """async function for starting web server"""
     app = web.Application()
 
